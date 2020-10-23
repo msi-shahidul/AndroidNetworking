@@ -32,9 +32,9 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
-    private ArrayList<EarthQuackData> mEarthquakes;
+    private EarthQuackAdapter mArrayAdapter;
 
-    private static final String USGS_REQUEST_URL1 =
+    private static final String USGS_REQUEST_URL =
             "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2012-01-01&endtime=2012-12-01&minmagnitude=6";
 
     @Override
@@ -45,10 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Find a reference to the {@link ListView} in the layout
         ListView earthquakeListView = (ListView) findViewById(R.id.list);
+        mArrayAdapter = new EarthQuackAdapter(MainActivity.this,  new ArrayList<EarthQuackData>());
+        earthquakeListView.setAdapter(mArrayAdapter);
+
+
         earthquakeListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String urlAdd = mEarthquakes.get(i).getUrlAddress();
+
+                String urlAdd = mArrayAdapter.getItem(i).getUrlAddress();
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse(urlAdd));
                 if (intent.resolveActivity(getPackageManager()) != null) {
@@ -73,8 +78,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Message message = new Message();
-                mEarthquakes = QueryUtils.fetchEarthquakeData(USGS_REQUEST_URL1);
-                message.obj = mEarthquakes;
+                message.obj = QueryUtils.fetchEarthquakeData(USGS_REQUEST_URL);
                 asyncHandler.sendMessage(message);
             }
         };
@@ -91,9 +95,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 ArrayList<EarthQuackData> dd = (ArrayList<EarthQuackData>)response;
-                ListView earthquakeListView = (ListView) findViewById(R.id.list);
-                ArrayAdapter adapter = new EarthQuackAdapter(MainActivity.this,  dd);
-                earthquakeListView.setAdapter(adapter);
+                mArrayAdapter.addAll(dd);
             }
         });
     }
